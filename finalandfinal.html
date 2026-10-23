@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VoltGuard AI — Liquid Glass BMS & Physics Simulation</title>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tailwind Configuration -->
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            glass: {
+              light: 'rgba(255, 255, 255, 0.45)',
+              dark: 'rgba(15, 23, 42, 0.55)',
+              borderLight: 'rgba(255, 255, 255, 0.6)',
+              borderDark: 'rgba(255, 255, 255, 0.12)',
+            },
+            cyanGlow: '#06b6d4',
+            tealGlow: '#14b8a6',
+            violetGlow: '#8b5cf6',
+            amberAlert: '#f59e0b',
+            roseAlert: '#f43f5e',
+            emeraldSafe: '#10b981',
+          },
+          animation: {
+            'float-slow': 'float 14s ease-in-out infinite',
+            'float-reverse': 'floatRev 18s ease-in-out infinite',
+            'pulse-glow': 'pulseGlow 3s ease-in-out infinite',
+            'fluid-wave': 'wave 4s ease-in-out infinite alternate',
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translate(0px, 0px) scale(1)' },
+              '50%': { transform: 'translate(30px, -40px) scale(1.1)' },
+            },
+            floatRev: {
+              '0%, 100%': { transform: 'translate(0px, 0px) scale(1)' },
+              '50%': { transform: 'translate(-40px, 30px) scale(0.95)' },
+            },
+            pulseGlow: {
+              '0%, 100%': { opacity: '0.4' },
+              '50%': { opacity: '0.8' },
+            },
+            wave: {
+              '0%': { transform: 'translateY(0px) rotate(0deg)' },
+              '100%': { transform: 'translateY(-6px) rotate(3deg)' }
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    /* CSS Variables for Liquid Glass Themes */
+    :root {
+      --bg-gradient: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 40%, #e0e7ff 100%);
+      --orb-1: rgba(6, 182, 212, 0.25);
+      --orb-2: rgba(139, 92, 246, 0.2);
+      --orb-3: rgba(20, 184, 166, 0.25);
+      
+      --glass-bg: rgba(255, 255, 255, 0.55);
+      --glass-bg-hover: rgba(255, 255, 255, 0.7);
+      --glass-border: rgba(255, 255, 255, 0.7);
+      --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.08), inset 0 1px 1px 0 rgba(255, 255, 255, 0.9);
+      
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --text-subtle: #94a3b8;
+    }
+
+    html.dark {
+      --bg-gradient: linear-gradient(135deg, #070b14 0%, #0f172a 50%, #0d111d 100%);
+      --orb-1: rgba(6, 182, 212, 0.18);
+      --orb-2: rgba(139, 92, 246, 0.18);
+      --orb-3: rgba(20, 184, 166, 0.15);
+      
+      --glass-bg: rgba(15, 23, 42, 0.6);
+      --glass-bg-hover: rgba(30, 41, 59, 0.75);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --glass-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.45), inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
+      
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-subtle: #64748b;
+    }
+
+    body {
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      transition: background 0.5s ease, color 0.3s ease;
+    }
+
+    .liquid-glass {
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--glass-shadow);
+      border-radius: 1.25rem;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .liquid-glass::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+      pointer-events: none;
+    }
+
+    .liquid-glass-interactive:hover {
+      background: var(--glass-bg-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 16px 36px 0 rgba(0, 0, 0, 0.15), inset 0 1px 2px 0 rgba(255, 255, 255, 0.25);
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.3);
+      border-radius: 9999px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .animate-float-slow, .animate-float-reverse, .animate-pulse-glow, .animate-fluid-wave {
+        animation: none !important;
+      }
+      .liquid-glass {
+        transition: none !important;
+      }
+    }
+
+    .battery-glass-casing {
+      background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.02) 50%, rgba(0,0,0,0.1) 100%);
+      border: 1.5px solid rgba(255, 255, 255, 0.25);
+      box-shadow: inset 0 0 15px rgba(255,255,255,0.15), 0 10px 25px rgba(0,0,0,0.2);
+    }
+
+    .glass-reflection {
+      background: linear-gradient(120deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.05) 30%, transparent 60%);
+    }
+
+    .gauge-ring {
+      transition: stroke-dasharray 0.5s ease, stroke 0.5s ease;
+    }
+  </style>
+</head>
+<body class="relative min-h-screen flex flex-col justify-between selection:bg-cyan-500/30">
+
+  <!-- Ambient Background Orbs -->
+  <div class="fixed inset-0 pointer-events-none overflow-hidden z-0" aria-hidden="true">
+    <div class="absolute top-[-10%] left-[-5%] w-[500px] h-[500px] rounded-full bg-cyan-500/20 blur-[120px] animate-float-slow"></div>
+    <div class="absolute top-[30%] right-[-10%] w-[600px] h-[600px] rounded-full bg-violet-600/20 blur-[140px] animate-float-reverse"></div>
+    <div class="absolute bottom-[-10%] left-[20%] w-[550px] h-[550px] rounded-full bg-teal-400/20 blur-[130px] animate-float-slow"></div>
+  </div>
+
+  <div class="relative z-10 flex-grow flex flex-col max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 gap-6">
+
+    <!-- HEADER / NAVIGATION -->
+    <header class="liquid-glass px-5 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-3.5 w-full md:w-auto justify-between md:justify-start">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-violet-500 p-0.5 shadow-lg shadow-cyan-500/20">
+            <div class="w-full h-full bg-slate-950/40 rounded-[10px] backdrop-blur-md flex items-center justify-center">
+              <svg class="w-6 h-6 text-cyan-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="font-bold text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-cyan-500 via-teal-400 to-violet-500">VoltGuard AI</h1>
+              <span class="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-500">3.7V Li-Ion</span>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Liquid Glass BMS & Electro-Thermal Simulation</p>
+          </div>
+        </div>
+
+        <div class="flex md:hidden items-center gap-2">
+          <button id="openSettingsBtnMobile" class="p-2 rounded-xl bg-slate-500/10 hover:bg-slate-500/20 text-slate-600 dark:text-slate-300 transition" aria-label="Open Settings">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Controls, Telemetry Source Mode Selector, and Theme Engine -->
+      <div class="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end flex-wrap">
+        
+        <!-- HARDWARE VS SIMULATION MODE TAB TOGGLE -->
+        <div class="flex items-center bg-slate-500/10 p-1 rounded-xl border border-slate-500/20 text-xs font-semibold">
+          <button id="btnModeHardware" class="px-3 py-1 rounded-lg transition text-slate-400 hover:text-slate-200">Hardware Mode</button>
+          <button id="btnModeSim" class="px-3 py-1 rounded-lg transition bg-amber-500/20 text-amber-500 border border-amber-500/30">Simulation Mode</button>
+        </div>
+
+        <!-- Connection / Mode Status Pill -->
+        <div id="statusPill" class="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-medium">
+          <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+          <span id="statusText">SIMULATED DATA (Physics Model)</span>
+        </div>
+
+        <!-- Theme Selector -->
+        <div class="flex items-center bg-slate-500/10 p-1 rounded-xl border border-slate-500/20">
+          <button id="themeLight" class="px-2.5 py-1 rounded-lg text-xs font-medium transition text-slate-500 dark:text-slate-400 hover:text-cyan-500" title="Light Glass">Light</button>
+          <button id="themeDark" class="px-2.5 py-1 rounded-lg text-xs font-medium transition text-slate-500 dark:text-slate-400 hover:text-cyan-500" title="Dark Glass">Dark</button>
+          <button id="themeSystem" class="px-2.5 py-1 rounded-lg text-xs font-medium transition text-slate-500 dark:text-slate-400 hover:text-cyan-500" title="System Theme">Auto</button>
+        </div>
+
+        <button id="openSettingsBtn" class="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-600 dark:text-cyan-400 text-xs font-medium transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          <span>Settings</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- UNMISTAKABLE MODE NOTICE BANNER -->
+    <div id="simNoticeBanner" class="p-3 rounded-2xl bg-gradient-to-r from-amber-500/15 via-cyan-500/10 to-violet-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-300 text-xs flex flex-col md:flex-row items-center justify-between gap-2 shadow-lg">
+      <div class="flex items-center gap-2">
+        <span class="px-2 py-0.5 rounded bg-amber-500 text-slate-950 font-bold uppercase text-[10px]">SIMULATED DATA</span>
+        <span class="font-medium">Active physics model: V_term = V_ocv - (I × R_int) &amp; Electro-thermal P_heat = I² × R_int integration.</span>
+      </div>
+      <span class="text-[11px] opacity-80 text-slate-500 dark:text-slate-400 italic">Educational electro-thermal approximation. Never overrides hardware BMS.</span>
+    </div>
+
+    <!-- MAIN METRIC GAUGES ROW -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      
+      <!-- Terminal Voltage Card -->
+      <div class="liquid-glass p-4 flex items-center justify-between">
+        <div>
+          <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Terminal Voltage</span>
+          <div class="flex items-baseline gap-1 mt-1">
+            <span id="valVoltage" class="text-2xl font-bold tracking-tight text-slate-800 dark:text-slate-100">--</span>
+            <span class="text-xs text-slate-500 font-medium">V</span>
+          </div>
+          <span id="labelVoltageStatus" class="text-[11px] font-medium text-slate-400 mt-1 block">Awaiting data</span>
+        </div>
+        <div class="relative w-16 h-16 flex items-center justify-center">
+          <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+            <path class="stroke-slate-200 dark:stroke-slate-700/50" stroke-width="3" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+            <path id="gaugeVoltage" class="gauge-ring stroke-cyan-500" stroke-width="3" stroke-dasharray="0, 100" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+          </svg>
+          <div class="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-cyan-500" id="percentVoltage">--%</div>
+        </div>
+      </div>
+
+      <!-- Current Load Card -->
+      <div class="liquid-glass p-4 flex items-center justify-between">
+        <div>
+          <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Current Load</span>
+          <div class="flex items-baseline gap-1 mt-1">
+            <span id="valCurrent" class="text-2xl font-bold tracking-tight text-slate-800 dark:text-slate-100">--</span>
+            <span class="text-xs text-slate-500 font-medium">A</span>
+          </div>
+          <span id="labelCurrentStatus" class="text-[11px] font-medium text-slate-400 mt-1 block">Awaiting data</span>
+        </div>
+        <div class="relative w-16 h-16 flex items-center justify-center">
+          <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+            <path class="stroke-slate-200 dark:stroke-slate-700/50" stroke-width="3" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+            <path id="gaugeCurrent" class="gauge-ring stroke-violet-500" stroke-width="3" stroke-dasharray="0, 100" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+          </svg>
+          <div class="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-violet-500" id="percentCurrent">--%</div>
+        </div>
+      </div>
+
+      <!-- Temperature Card -->
+      <div class="liquid-glass p-4 flex items-center justify-between">
+        <div>
+          <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Cell Temp &amp; R_int</span>
+          <div class="flex items-baseline gap-1 mt-1">
+            <span id="valTemp" class="text-2xl font-bold tracking-tight text-slate-800 dark:text-slate-100">--</span>
+            <span id="unitTempLabel" class="text-xs text-slate-500 font-medium">°C</span>
+          </div>
+          <span id="labelTempStatus" class="text-[11px] font-medium text-slate-400 mt-1 block">R_int: -- mΩ</span>
+        </div>
+        <div class="relative w-16 h-16 flex items-center justify-center">
+          <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+            <path class="stroke-slate-200 dark:stroke-slate-700/50" stroke-width="3" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+            <path id="gaugeTemp" class="gauge-ring stroke-teal-500" stroke-width="3" stroke-dasharray="0, 100" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+          </svg>
+          <div class="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-teal-500" id="percentTemp">--%</div>
+        </div>
+      </div>
+
+      <!-- State of Charge (SOC) Card -->
+      <div class="liquid-glass p-4 flex items-center justify-between">
+        <div>
+          <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">State of Charge</span>
+          <div class="flex items-baseline gap-1 mt-1">
+            <span id="valSOC" class="text-2xl font-bold tracking-tight text-slate-800 dark:text-slate-100">--</span>
+            <span class="text-xs text-slate-500 font-medium">%</span>
+          </div>
+          <span id="labelSOCStatus" class="text-[11px] font-medium text-slate-400 mt-1 block">OCV capacity curve</span>
+        </div>
+        <div class="relative w-16 h-16 flex items-center justify-center">
+          <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+            <path class="stroke-slate-200 dark:stroke-slate-700/50" stroke-width="3" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+            <path id="gaugeSOC" class="gauge-ring stroke-emerald-500" stroke-width="3" stroke-dasharray="0, 100" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+          </svg>
+          <div class="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-emerald-500" id="percentSOCDisplay">--%</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- DYNAMIC PHYSICS SIMULATION CONTROLS PANEL (Visible in Simulation Mode) -->
+    <div id="simControlsSection" class="liquid-glass p-5 space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-500/10 pb-3">
+        <div>
+          <h2 class="font-bold text-sm tracking-tight flex items-center gap-2 text-amber-500">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+            Interactive Physics Simulation Deck
+          </h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Adjust dynamic discharge/charge loads, preset operating modes, and time acceleration.</p>
+        </div>
+
+        <!-- Simulation Action Buttons -->
+        <div class="flex items-center gap-2">
+          <button id="btnSimStartPause" class="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold text-xs transition shadow-md shadow-amber-500/20">Pause Sim</button>
+          <button id="btnSimReset" class="px-3 py-1.5 rounded-xl bg-slate-500/15 hover:bg-slate-500/25 text-slate-300 text-xs font-semibold transition">Reset Cell</button>
+          
+          <!-- Speed Multiplier selector -->
+          <div class="flex items-center bg-slate-500/10 p-1 rounded-xl border border-slate-500/20 text-xs font-medium">
+            <button id="speed1x" class="px-2 py-0.5 rounded transition bg-amber-500/20 text-amber-400 font-bold">1x</button>
+            <button id="speed5x" class="px-2 py-0.5 rounded transition text-slate-400 hover:text-slate-200">5x</button>
+            <button id="speed10x" class="px-2 py-0.5 rounded transition text-slate-400 hover:text-slate-200">10x</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Load Preset Buttons & Manual Slider -->
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+        <!-- Preset Mode Buttons (5 cols) -->
+        <div class="md:col-span-5 space-y-1.5">
+          <label class="block text-xs font-semibold text-slate-400">Operating Load Presets</label>
+          <div class="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
+            <button id="presetIdle" class="px-2 py-1.5 rounded-xl bg-slate-500/10 hover:bg-slate-500/20 text-xs font-medium text-slate-300 border border-slate-500/20 transition">Idle (0.05A)</button>
+            <button id="presetLight" class="px-2 py-1.5 rounded-xl bg-slate-500/10 hover:bg-slate-500/20 text-xs font-medium text-slate-300 border border-slate-500/20 transition">Light (0.8A)</button>
+            <button id="presetNormal" class="px-2 py-1.5 rounded-xl bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30 transition">Normal (2.5A)</button>
+            <button id="presetHeavy" class="px-2 py-1.5 rounded-xl bg-slate-500/10 hover:bg-slate-500/20 text-xs font-medium text-slate-300 border border-slate-500/20 transition">Heavy (6.0A)</button>
+            <button id="presetCharge" class="px-2 py-1.5 rounded-xl bg-cyan-500/20 text-cyan-300 font-semibold border border-cyan-500/30 transition">Charge (-2A)</button>
+          </div>
+        </div>
+
+        <!-- Continuous Slider Control (7 cols) -->
+        <div class="md:col-span-7 space-y-1.5">
+          <div class="flex justify-between text-xs">
+            <span class="font-semibold text-slate-400">Continuous Current Adjustment:</span>
+            <span id="simCurrentSliderLabel" class="font-bold text-amber-400 font-mono">2.50 A (Discharge)</span>
+          </div>
+          <input id="simCurrentSlider" type="range" min="-3.0" max="10.0" step="0.1" value="2.5" class="w-full accent-amber-500 h-2 bg-slate-700 rounded-lg cursor-pointer" />
+          <div class="flex justify-between text-[10px] text-slate-500 font-mono">
+            <span>-3.0A (Charge)</span>
+            <span>0A (Idle)</span>
+            <span>+5.0A</span>
+            <span>+10.0A (Max Stress)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN BODY GRID: Battery Visualizer + Telemetry Charts -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+      
+      <!-- LEFT / TOP: Liquid Glass Battery Cell Visualizer (5 Cols) -->
+      <div class="lg:col-span-5 liquid-glass p-6 flex flex-col justify-between items-center relative min-h-[380px]">
+        <div class="w-full flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-sm shadow-cyan-400/50"></span>
+            <h2 class="font-semibold text-sm tracking-tight">Cell 18650 Visualizer</h2>
+          </div>
+          <span id="batteryStateBadge" class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-500/10 border border-slate-500/20 text-slate-500">Standby</span>
+        </div>
+
+        <!-- Layered 3D Liquid Glass Battery Cell -->
+        <div class="relative my-auto py-6 flex items-center justify-center w-full max-w-[280px]">
+          <div class="absolute -top-1 w-12 h-3 bg-gradient-to-r from-slate-300 via-slate-100 to-slate-400 dark:from-slate-600 dark:via-slate-400 dark:to-slate-700 rounded-t-md shadow-md border-t border-white/50 z-20"></div>
+
+          <div class="w-40 h-64 rounded-3xl battery-glass-casing relative overflow-hidden flex flex-col justify-end p-2.5 z-10 backdrop-blur-md">
+            <div id="liquidFill" class="w-full rounded-2xl bg-gradient-to-t from-cyan-600 via-teal-400 to-cyan-300 transition-all duration-700 ease-out relative overflow-hidden flex flex-col justify-between" style="height: 0%;">
+              <div class="absolute top-0 inset-x-0 h-3 bg-white/30 animate-fluid-wave rounded-full blur-[1px]"></div>
+              <div class="absolute inset-0 opacity-40 bg-[radial-gradient(circle_at_50%_120%,rgba(255,255,255,0.8),transparent_70%)]"></div>
+            </div>
+
+            <div class="absolute inset-0 rounded-3xl pointer-events-none glass-reflection z-30"></div>
+            <div class="absolute inset-y-0 right-3 w-1.5 bg-white/20 rounded-full blur-[1px] pointer-events-none z-30"></div>
+
+            <div class="absolute inset-0 flex flex-col items-center justify-center z-40 text-center pointer-events-none drop-shadow-md">
+              <span id="visualSocText" class="text-3xl font-extrabold tracking-tight text-white dark:text-slate-100">--%</span>
+              <span id="visualStatusSub" class="text-[11px] font-medium text-white/80 uppercase tracking-widest mt-0.5">DISCONNECTED</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Battery Cell Metrics Footer -->
+        <div class="w-full grid grid-cols-3 gap-2 pt-4 border-t border-slate-500/10 text-center text-xs">
+          <div class="bg-slate-500/5 p-2 rounded-xl">
+            <span class="text-slate-400 text-[10px] block font-medium">Nominal</span>
+            <span class="font-semibold text-slate-700 dark:text-slate-200">3.70 V</span>
+          </div>
+          <div class="bg-slate-500/5 p-2 rounded-xl">
+            <span class="text-slate-400 text-[10px] block font-medium">Max Limit</span>
+            <span id="dispMaxV" class="font-semibold text-slate-700 dark:text-slate-200">4.20 V</span>
+          </div>
+          <div class="bg-slate-500/5 p-2 rounded-xl">
+            <span class="text-slate-400 text-[10px] block font-medium">Min Cutoff</span>
+            <span id="dispMinV" class="font-semibold text-slate-700 dark:text-slate-200">3.00 V</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT / BOTTOM: Real-Time Telemetry / Simulation Canvas Chart (7 Cols) -->
+      <div class="lg:col-span-7 liquid-glass p-6 flex flex-col justify-between min-h-[380px]">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+          <div>
+            <h2 class="font-semibold text-sm tracking-tight flex items-center gap-2">
+              <svg class="w-4 h-4 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/></svg>
+              Telemetry Stream Plotter
+            </h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Live voltage, current load, and thermal dissipation trends</p>
+          </div>
+
+          <!-- Chart Metric Selector -->
+          <div class="flex items-center gap-1 bg-slate-500/10 p-1 rounded-xl border border-slate-500/15 text-xs font-medium self-start sm:self-auto">
+            <button id="btnChartVoltage" class="px-2.5 py-1 rounded-lg transition bg-cyan-500/20 text-cyan-600 dark:text-cyan-300">Voltage</button>
+            <button id="btnChartCurrent" class="px-2.5 py-1 rounded-lg transition text-slate-500 hover:text-slate-800 dark:hover:text-slate-200">Current</button>
+            <button id="btnChartTemp" class="px-2.5 py-1 rounded-lg transition text-slate-500 hover:text-slate-800 dark:hover:text-slate-200">Temp</button>
+          </div>
+        </div>
+
+        <!-- Custom Canvas Chart Render -->
+        <div class="relative w-full h-64 flex-grow rounded-xl bg-slate-900/10 dark:bg-slate-950/30 p-2 border border-slate-500/10 overflow-hidden">
+          <canvas id="telemetryCanvas" class="w-full h-full block"></canvas>
+          <div id="chartTooltip" class="absolute hidden top-3 left-3 bg-slate-900/80 text-white backdrop-blur-md px-3 py-1.5 rounded-lg text-xs shadow-lg border border-white/10 pointer-events-none">
+            <span id="tooltipTime" class="text-slate-400 block text-[10px]">--:--</span>
+            <span id="tooltipVal" class="font-bold text-cyan-300">--</span>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mt-4 pt-3 border-t border-slate-500/10">
+          <div class="flex items-center gap-2">
+            <span id="freshnessIndicator" class="w-2 h-2 rounded-full bg-slate-400"></span>
+            <span id="lastUpdatedText">Data freshness: Initializing...</span>
+          </div>
+          <span id="sampleRateText" class="font-mono text-[11px]">Sampling: 1.0s</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- BOTTOM ROW: ESP32 Hardware Config + Gemini AI Assistant -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      
+      <!-- ESP32 & Hardware Connection Config (5 Cols) -->
+      <div class="lg:col-span-5 liquid-glass p-6 space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 class="font-semibold text-sm tracking-tight flex items-center gap-2">
+            <svg class="w-4 h-4 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071a10 10 0 0114.142 0M1.757 8.929a16 16 0 0122.486 0"/></svg>
+            ESP32 Micro-controller Link
+          </h2>
+          <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-slate-500/10 border border-slate-500/20 text-slate-500">HTTP REST</span>
+        </div>
+
+        <p class="text-xs text-slate-500 dark:text-slate-400">Enter your physical ESP32 IP address below. Switching to Hardware Mode reads directly from hardware sensor pins.</p>
+
+        <div class="space-y-3 pt-1">
+          <div>
+            <label class="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">ESP32 Endpoint Address</label>
+            <div class="flex gap-2">
+              <input id="esp32IpInput" type="text" value="192.168.4.1" placeholder="e.g. 192.168.1.150" class="flex-grow px-3 py-2 rounded-xl bg-slate-500/10 border border-slate-500/20 text-xs font-mono focus:outline-none focus:border-cyan-500 transition" />
+              <button id="btnConnect" class="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-semibold text-xs transition shadow-md shadow-cyan-500/20">Connect</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- System Alerts Banner -->
+        <div id="safetyAlertBox" class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs flex items-center gap-2">
+          <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span id="safetyAlertText">Autonomous Protection Active — Cell limits nominal.</span>
+        </div>
+      </div>
+
+      <!-- Gemini AI Battery Diagnostics Assistant (7 Cols) -->
+      <div class="lg:col-span-7 liquid-glass p-6 flex flex-col justify-between min-h-[300px]">
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="font-semibold text-sm tracking-tight flex items-center gap-2">
+              <svg class="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+              Gemini AI Battery Health Assistant
+            </h2>
+            <button id="btnAiAnalyze" class="px-3 py-1.5 rounded-xl bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 text-violet-600 dark:text-violet-300 text-xs font-semibold transition flex items-center gap-1.5">
+              <span>Run Health Audit</span>
+            </button>
+          </div>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Evaluates current thermal stress, voltage drop under load, and degradation factors in both Hardware and Simulation modes.</p>
+
+          <div id="aiResponseBox" class="p-4 rounded-xl bg-slate-900/10 dark:bg-slate-950/40 border border-slate-500/10 min-h-[120px] max-h-[160px] overflow-y-auto text-xs space-y-2 leading-relaxed text-slate-700 dark:text-slate-300">
+            <p class="text-slate-400 italic">Click "Run Health Audit" or ask a question below to analyze active cell metrics...</p>
+          </div>
+        </div>
+
+        <div class="flex gap-2 mt-4 pt-3 border-t border-slate-500/10">
+          <input id="aiInputPrompt" type="text" placeholder="Ask AI e.g. 'Analyze thermal dissipation under Heavy Load'" class="flex-grow px-3 py-2 rounded-xl bg-slate-500/10 border border-slate-500/20 text-xs focus:outline-none focus:border-violet-500 transition" />
+          <button id="btnAskAi" class="px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-semibold text-xs transition shadow-md shadow-violet-500/20">Ask AI</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="liquid-glass px-5 py-3 text-center text-xs text-slate-500 dark:text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-2 mt-2">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-cyan-500"></span>
+        <span>VoltGuard AI Core v2.5 Physics Model</span>
+      </div>
+      <span>Liquid Glass UI Engine — Autonomous Battery Protection Active</span>
+    </footer>
+
+  </div>
+
+  <!-- SETTINGS & SIMULATION PARAMETERS MODAL DIALOG -->
+  <div id="settingsModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-300">
+    <div class="liquid-glass max-w-lg w-full p-6 space-y-5 shadow-2xl scale-95 transition-transform duration-300" id="settingsModalContainer">
+      <div class="flex items-center justify-between border-b border-slate-500/10 pb-3">
+        <h3 class="font-bold text-base flex items-center gap-2">
+          <svg class="w-5 h-5 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          System &amp; Electro-Thermal Model Parameters
+        </h3>
+        <button id="closeSettingsBtn" class="p-1 rounded-lg text-slate-400 hover:text-slate-100 transition">&times;</button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+        <div>
+          <label class="block font-semibold mb-1 text-slate-600 dark:text-slate-300">Max Over-Voltage (V)</label>
+          <input id="cfgMaxVolt" type="number" step="0.05" value="4.25" class="w-full px-3 py-2 rounded-xl bg-slate-500/10 border border-slate-500/20 font-mono focus:outline-none focus:border-cyan-500" />
+        </div>
+
+        <div>
+          <label class="block font-semibold mb-1 text-slate-600 dark:text-slate-300">Min Under-Voltage Cutoff (V)</label>
+          <input id="cfgMinVolt" type="number" step="0.05" value="3.00" class="w-full px-3 py-2 rounded-xl bg-slate-500/10 border border-slate-500/20 font-mono focus:outline-none focus:border-cyan-500" />
+        </div>
+
+        <div>
+          <label class="block font-semibold mb-1 text-slate-600 dark:text-slate-300">Max Temp Warning Limit (°C)</label>
+          <input id="cfgMaxTemp" type="number" step="1" value="45" class="w-full px-3 py-2 rounded-xl bg-slate-500/10 border border-slate-500/20 font-mono focus:outline-none focus:border-cyan-500" />
+        </div>
+
+        <div>
+          <label class="block font-semibold mb-1 text-slate-600 dark:text-slate-300">Temperature Unit Display</label>
+          <select id="cfgTempUnit" class="w-full px-3 py-2 rounded-xl bg-slate-500/10 border border-slate-500/20 font-mono focus:outline-none focus:border-cyan-500">
+            <option value="C">Celsius (°C)</option>
+            <option value="F">Fahrenheit (°F)</option>
+          </select>
+        </div>
+
+        <!-- Simulation Physics Configuration Options -->
+        <div>
+          <label class="block font-semibold mb-1 text-amber-500">Nominal Capacity (Ah)</label>
+          <input id="cfgNominalCapacity" type="number" step="0.1" value="3.0" class="w-full px-3 py-2 rounded-xl bg-slate-500/10 border border-slate-500/20 font-mono focus:outline-none focus:border-amber-500" />
+        </div>
+
+        <div>
+          <label class="block font-semibold mb-1 text-amber-500">Base R_internal (mΩ)</label>
+          <input id="cfgBaseRint" type="number" step="1" value="35" class="w-full px-3 py-2 rounded-xl bg-slate-500/10 border border-slate-500/20 font-mono focus:outline-none focus:border-amber-500" />
+        </div>
+
+        <div>
+          <label class="block font-semibold mb-1 text-amber-500">Ambient Temperature (°C)</label>
+          <input id="cfgAmbientTemp" type="number" step="1" value="25" class="w-full px-3 py-2 rounded-xl bg-slate-500/10 border border-slate-500/20 font-mono focus:outline-none focus:border-amber-500" />
+        </div>
+
+        <div>
+          <label class="block font-semibold mb-1 text-amber-500">Cooling Dissipation Rate (h)</label>
+          <input id="cfgCoolingFactor" type="number" step="0.05" value="0.25" class="w-full px-3 py-2 rounded-xl bg-slate-500/10 border border-slate-500/20 font-mono focus:outline-none focus:border-amber-500" />
+        </div>
+
+        <div class="sm:col-span-2">
+          <label class="block font-semibold mb-1 text-slate-600 dark:text-slate-300">Gemini AI Key (Optional)</label>
+          <input id="cfgGeminiKey" type="password" placeholder="AIzaSy..." class="w-full px-3 py-2 rounded-xl bg-slate-500/10 border border-slate-500/20 font-mono focus:outline-none focus:border-violet-500" />
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-3 border-t border-slate-500/10">
+        <button id="cancelSettingsBtn" class="px-4 py-2 rounded-xl bg-slate-500/10 hover:bg-slate-500/20 font-medium text-xs transition">Cancel</button>
+        <button id="saveSettingsBtn" class="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-semibold text-xs transition shadow-md shadow-cyan-500/20">Save Configuration</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- APPLICATION LOGIC & ELECTRO-THERMAL SIMULATION ENGINE -->
+  <script>
+    // --- VoltGuard Application State ---
+    const state = {
+      theme: localStorage.getItem('voltguard_theme') || 'system',
+      dataMode: 'sim', // 'hardware' | 'sim'
+      hardwareConnected: false,
+      esp32Ip: '192.168.4.1',
+      pollingIntervalMs: 1000,
+      activeChartMetric: 'voltage',
+
+      // Configurable Safety & Model Thresholds
+      thresholds: {
+        maxVolt: parseFloat(localStorage.getItem('voltguard_maxV')) || 4.25,
+        minVolt: parseFloat(localStorage.getItem('voltguard_minV')) || 3.00,
+        maxTemp: parseFloat(localStorage.getItem('voltguard_maxT')) || 45,
+        tempUnit: localStorage.getItem('voltguard_tempUnit') || 'C',
+        geminiKey: localStorage.getItem('voltguard_geminiKey') || ''
+      },
+
+      // Electro-Thermal Physics Simulation Engine Parameters
+      simPhysics: {
+        running: true,
+        speedMultiplier: 1, // 1x, 5x, 10x
+        capacityAh: parseFloat(localStorage.getItem('voltguard_capAh')) || 3.0,
+        baseRintMilliOhms: parseFloat(localStorage.getItem('voltguard_baseRint')) || 35.0,
+        ambientTempC: parseFloat(localStorage.getItem('voltguard_ambientT')) || 25.0,
+        thermalMassC: 120.0, // Joules/°C approx thermal inertia
+        heatDissipationH: parseFloat(localStorage.getItem('voltguard_coolingH')) || 0.25, // W/°C
+
+        // Live Simulated Cell State Variables
+        soc: 85.0,            // % (0 to 100)
+        cellTempC: 25.0,      // °C
+        currentLoadA: 2.5,    // A (Positive = Discharge, Negative = Charge)
+        rIntEffective: 0.035, // Ohms
+        vOCV: 4.05,           // V (Open Circuit Voltage)
+        vTerminal: 3.96,      // V (Terminal Voltage)
+      },
+
+      // Data Buffers
+      hardwareData: null,
+      history: []
+    };
+
+    let mainLoopTimer = null;
+
+    // --- DOM Elements Reference ---
+    const dom = {
+      html: document.documentElement,
+      btnModeHardware: document.getElementById('btnModeHardware'),
+      btnModeSim: document.getElementById('btnModeSim'),
+      statusPill: document.getElementById('statusPill'),
+      statusText: document.getElementById('statusText'),
+      simNoticeBanner: document.getElementById('simNoticeBanner'),
+      simControlsSection: document.getElementById('simControlsSection'),
+      
+      // Metric Readouts & Gauges
+      valVoltage: document.getElementById('valVoltage'),
+      valCurrent: document.getElementById('valCurrent'),
+      valTemp: document.getElementById('valTemp'),
+      valSOC: document.getElementById('valSOC'),
+      unitTempLabel: document.getElementById('unitTempLabel'),
+      labelVoltageStatus: document.getElementById('labelVoltageStatus'),
+      labelCurrentStatus: document.getElementById('labelCurrentStatus'),
+      labelTempStatus: document.getElementById('labelTempStatus'),
+      labelSOCStatus: document.getElementById('labelSOCStatus'),
+      gaugeVoltage: document.getElementById('gaugeVoltage'),
+      gaugeCurrent: document.getElementById('gaugeCurrent'),
+      gaugeTemp: document.getElementById('gaugeTemp'),
+      gaugeSOC: document.getElementById('gaugeSOC'),
+      percentVoltage: document.getElementById('percentVoltage'),
+      percentCurrent: document.getElementById('percentCurrent'),
+      percentTemp: document.getElementById('percentTemp'),
+      percentSOCDisplay: document.getElementById('percentSOCDisplay'),
+
+      // Battery Visualizer
+      liquidFill: document.getElementById('liquidFill'),
+      visualSocText: document.getElementById('visualSocText'),
+      visualStatusSub: document.getElementById('visualStatusSub'),
+      batteryStateBadge: document.getElementById('batteryStateBadge'),
+      dispMaxV: document.getElementById('dispMaxV'),
+      dispMinV: document.getElementById('dispMinV'),
+
+      // Canvas Chart
+      telemetryCanvas: document.getElementById('telemetryCanvas'),
+      chartTooltip: document.getElementById('chartTooltip'),
+      tooltipTime: document.getElementById('tooltipTime'),
+      tooltipVal: document.getElementById('tooltipVal'),
+      btnChartVoltage: document.getElementById('btnChartVoltage'),
+      btnChartCurrent: document.getElementById('btnChartCurrent'),
+      btnChartTemp: document.getElementById('btnChartTemp'),
+      freshnessIndicator: document.getElementById('freshnessIndicator'),
+      lastUpdatedText: document.getElementById('lastUpdatedText'),
+
+      // Simulation Controls
+      btnSimStartPause: document.getElementById('btnSimStartPause'),
+      btnSimReset: document.getElementById('btnSimReset'),
+      speed1x: document.getElementById('speed1x'),
+      speed5x: document.getElementById('speed5x'),
+      speed10x: document.getElementById('speed10x'),
+      presetIdle: document.getElementById('presetIdle'),
+      presetLight: document.getElementById('presetLight'),
+      presetNormal: document.getElementById('presetNormal'),
+      presetHeavy: document.getElementById('presetHeavy'),
+      presetCharge: document.getElementById('presetCharge'),
+      simCurrentSlider: document.getElementById('simCurrentSlider'),
+      simCurrentSliderLabel: document.getElementById('simCurrentSliderLabel'),
+
+      // Hardware Config
+      esp32IpInput: document.getElementById('esp32IpInput'),
+      btnConnect: document.getElementById('btnConnect'),
+      safetyAlertBox: document.getElementById('safetyAlertBox'),
+      safetyAlertText: document.getElementById('safetyAlertText'),
+
+      // Gemini AI
+      btnAiAnalyze: document.getElementById('btnAiAnalyze'),
+      aiResponseBox: document.getElementById('aiResponseBox'),
+      aiInputPrompt: document.getElementById('aiInputPrompt'),
+      btnAskAi: document.getElementById('btnAskAi'),
+
+      // Settings Modal & Config Inputs
+      settingsModal: document.getElementById('settingsModal'),
+      settingsModalContainer: document.getElementById('settingsModalContainer'),
+      openSettingsBtn: document.getElementById('openSettingsBtn'),
+      openSettingsBtnMobile: document.getElementById('openSettingsBtnMobile'),
+      closeSettingsBtn: document.getElementById('closeSettingsBtn'),
+      cancelSettingsBtn: document.getElementById('cancelSettingsBtn'),
+      saveSettingsBtn: document.getElementById('saveSettingsBtn'),
+      cfgMaxVolt: document.getElementById('cfgMaxVolt'),
+      cfgMinVolt: document.getElementById('cfgMinVolt'),
+      cfgMaxTemp: document.getElementById('cfgMaxTemp'),
+      cfgTempUnit: document.getElementById('cfgTempUnit'),
+      cfgNominalCapacity: document.getElementById('cfgNominalCapacity'),
+      cfgBaseRint: document.getElementById('cfgBaseRint'),
+      cfgAmbientTemp: document.getElementById('cfgAmbientTemp'),
+      cfgCoolingFactor: document.getElementById('cfgCoolingFactor'),
+      cfgGeminiKey: document.getElementById('cfgGeminiKey'),
+
+      // Theme Buttons
+      themeLight: document.getElementById('themeLight'),
+      themeDark: document.getElementById('themeDark'),
+      themeSystem: document.getElementById('themeSystem')
+    };
+
+    // --- 1. Theme Engine ---
+    function applyTheme(themeMode) {
+      state.theme = themeMode;
+      localStorage.setItem('voltguard_theme', themeMode);
+
+      [dom.themeLight, dom.themeDark, dom.themeSystem].forEach(btn => {
+        btn.classList.remove('bg-cyan-500/20', 'text-cyan-500', 'font-bold');
+      });
+
+      let isDark = false;
+      if (themeMode === 'dark') {
+        isDark = true;
+        dom.themeDark.classList.add('bg-cyan-500/20', 'text-cyan-500', 'font-bold');
+      } else if (themeMode === 'light') {
+        isDark = false;
+        dom.themeLight.classList.add('bg-cyan-500/20', 'text-cyan-500', 'font-bold');
+      } else {
+        isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        dom.themeSystem.classList.add('bg-cyan-500/20', 'text-cyan-500', 'font-bold');
+      }
+
+      if (isDark) dom.html.classList.add('dark');
+      else dom.html.classList.remove('dark');
+
+      renderChart();
+    }
+
+    // --- 2. Physics-Based Battery Model Engine ---
+    // Calculates Open Circuit Voltage (OCV) based on SOC % for standard 3.7V Li-Ion
+    function calculateLiIonOCV(socPercent) {
+      const soc = Math.max(0, Math.min(100, socPercent)) / 100.0;
+      // Empirical polynomial approximation for Li-Ion OCV curve
+      const ocv = 3.0 + 0.7 * Math.pow(soc, 0.4) + 0.35 * soc + 0.15 * (Math.pow(soc, 8) - Math.pow(1 - soc, 8));
+      return Math.max(3.0, Math.min(4.2, ocv));
+    }
+
+    // Internal Resistance temperature dependence model
+    function calculateEffectiveRint(cellTempC) {
+      const baseR = state.simPhysics.baseRintMilliOhms / 1000.0; // Convert mΩ to Ohms
+      // Cold temperatures significantly increase internal resistance; extreme heat causes slight degradation
+      const tempDelta = cellTempC - 25.0;
+      if (cellTempC < 25.0) {
+        return baseR * (1.0 + Math.abs(tempDelta) * 0.025); // +2.5% per °C below 25°C
+      } else {
+        return baseR * (1.0 - tempDelta * 0.005 + Math.pow(tempDelta, 2) * 0.0003);
+      }
+    }
+
+    // Step physics forward by dtSeconds
+    function stepPhysicsModel(dtSeconds) {
+      if (!state.simPhysics.running) return;
+
+      const sp = state.simPhysics;
+      const effectiveDt = dtSeconds * sp.speedMultiplier;
+
+      // 1. Calculate SOC Coulomb Counting
+      const currentA = sp.currentLoadA; // Amperes
+      const capacityAmpsSeconds = sp.capacityAh * 3600.0;
+      const socChange = (-currentA * effectiveDt / capacityAmpsSeconds) * 100.0;
+      sp.soc = Math.max(0.0, Math.min(100.0, sp.soc + socChange));
+
+      // 2. Calculate OCV and Effective Internal Resistance
+      sp.vOCV = calculateLiIonOCV(sp.soc);
+      sp.rIntEffective = calculateEffectiveRint(sp.cellTempC);
+
+      // 3. Calculate Terminal Voltage V_term = V_ocv - (I * R_int)
+      sp.vTerminal = sp.vOCV - (currentA * sp.rIntEffective);
+      sp.vTerminal = Math.max(2.5, Math.min(4.35, sp.vTerminal));
+
+      // 4. Calculate Thermal Dissipation: dT/dt = (I^2 * R_int - h * (T_cell - T_amb)) / C_thermal
+      const heatGeneratedJoules = Math.pow(currentA, 2) * sp.rIntEffective * effectiveDt;
+      const heatDissipatedJoules = sp.heatDissipationH * (sp.cellTempC - sp.ambientTempC) * effectiveDt;
+      const netEnergyJoules = heatGeneratedJoules - heatDissipatedJoules;
+      
+      const deltaTemp = netEnergyJoules / sp.thermalMassC;
+      sp.cellTempC += deltaTemp;
+
+      // Thermal runaway / boundary clamps
+      sp.cellTempC = Math.max(sp.ambientTempC - 5.0, Math.min(85.0, sp.cellTempC));
+    }
+
+    // --- 3. Telemetry Dispatcher (Hardware vs Simulation Separation) ---
+    async function updateTelemetryCycle() {
+      const now = new Date();
+
+      if (state.dataMode === 'sim') {
+        // Step Simulation Physics Engine
+        stepPhysicsModel(1.0); // 1 second time step
+
+        const simFrame = {
+          voltage: parseFloat(state.simPhysics.vTerminal.toFixed(3)),
+          current: parseFloat(state.simPhysics.currentLoadA.toFixed(2)),
+          temp: parseFloat(state.simPhysics.cellTempC.toFixed(1)),
+          soc: Math.round(state.simPhysics.soc),
+          rInt: parseFloat((state.simPhysics.rIntEffective * 1000).toFixed(1)),
+          timestamp: now
+        };
+
+        pushHistoryFrame(simFrame);
+        renderTelemetryUI(simFrame);
+        evaluateSafetyRules(simFrame);
+      } else {
+        // HARDWARE MODE: Fetch authentic data from ESP32
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 1500);
+          const endpoint = `http://${state.esp32Ip}/api/telemetry`;
+          
+          const res = await fetch(endpoint, { signal: controller.signal });
+          clearTimeout(timeoutId);
+
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+
+          state.hardwareConnected = true;
+          const hwFrame = {
+            voltage: parseFloat(data.voltage),
+            current: parseFloat(data.current),
+            temp: parseFloat(data.temp),
+            soc: Math.round(((parseFloat(data.voltage) - state.thresholds.minVolt) / (4.20 - state.thresholds.minVolt)) * 100),
+            rInt: null,
+            timestamp: now
+          };
+
+          state.hardwareData = hwFrame;
+          pushHistoryFrame(hwFrame);
+          renderTelemetryUI(hwFrame);
+          evaluateSafetyRules(hwFrame);
+        } catch (err) {
+          state.hardwareConnected = false;
+          renderHardwareUnavailable();
+        }
+      }
+    }
+
+    function pushHistoryFrame(frame) {
+      state.history.push(frame);
+      if (state.history.length > 30) state.history.shift();
+    }
+
+    // --- 4. UI Rendering Engine ---
+    function updateGaugeRing(svgElement, percent) {
+      const dash = Math.max(0, Math.min(100, percent));
+      svgElement.setAttribute('stroke-dasharray', `${dash}, 100`);
+    }
+
+    function renderTelemetryUI(frame) {
+      const { voltage, current, temp, soc, rInt, timestamp } = frame;
+
+      const displayTemp = state.thresholds.tempUnit === 'F' 
+        ? ((temp * 9/5) + 32).toFixed(1) 
+        : temp.toFixed(1);
+
+      dom.valVoltage.innerText = voltage.toFixed(2);
+      dom.valCurrent.innerText = current.toFixed(2);
+      dom.valTemp.innerText = displayTemp;
+      dom.valSOC.innerText = soc;
+      dom.unitTempLabel.innerText = `°${state.thresholds.tempUnit}`;
+
+      dom.labelVoltageStatus.innerText = voltage >= 4.2 ? 'Full Charge' : voltage <= 3.1 ? 'Low Cutoff' : 'Nominal Level';
+      dom.labelCurrentStatus.innerText = current < 0 ? 'Charging In Progress' : current === 0 ? 'Idle Standby' : 'Discharging Load';
+      dom.labelTempStatus.innerText = rInt ? `R_int: ${rInt} mΩ` : 'Hardware Thermistor';
+
+      const voltPct = Math.round(((voltage - 3.0) / 1.2) * 100);
+      const currPct = Math.round((Math.abs(current) / 8.0) * 100);
+      const tempPct = Math.round((temp / 60) * 100);
+
+      updateGaugeRing(dom.gaugeVoltage, voltPct);
+      updateGaugeRing(dom.gaugeCurrent, currPct);
+      updateGaugeRing(dom.gaugeTemp, tempPct);
+      updateGaugeRing(dom.gaugeSOC, soc);
+
+      dom.percentVoltage.innerText = `${Math.max(0, Math.min(100, voltPct))}%`;
+      dom.percentCurrent.innerText = `${Math.max(0, Math.min(100, currPct))}%`;
+      dom.percentTemp.innerText = `${Math.max(0, Math.min(100, tempPct))}%`;
+      dom.percentSOCDisplay.innerText = `${soc}%`;
+
+      // 3D Glass Battery Casing Fill
+      dom.liquidFill.style.height = `${soc}%`;
+      dom.visualSocText.innerText = `${soc}%`;
+      dom.visualStatusSub.innerText = current < 0 ? 'CHARGING' : current > 0 ? 'DISCHARGING' : 'IDLE';
+
+      if (soc > 50) {
+        dom.liquidFill.className = 'w-full rounded-2xl bg-gradient-to-t from-cyan-600 via-teal-400 to-cyan-300 transition-all duration-700 ease-out relative overflow-hidden flex flex-col justify-between';
+      } else if (soc > 20) {
+        dom.liquidFill.className = 'w-full rounded-2xl bg-gradient-to-t from-amber-600 via-amber-400 to-yellow-300 transition-all duration-700 ease-out relative overflow-hidden flex flex-col justify-between';
+      } else {
+        dom.liquidFill.className = 'w-full rounded-2xl bg-gradient-to-t from-rose-700 via-rose-500 to-pink-400 transition-all duration-700 ease-out relative overflow-hidden flex flex-col justify-between';
+      }
+
+      if (current < 0) {
+        dom.batteryStateBadge.className = 'text-xs font-semibold px-2.5 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-500';
+        dom.batteryStateBadge.innerText = 'Charging';
+      } else if (current > 0) {
+        dom.batteryStateBadge.className = 'text-xs font-semibold px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500';
+        dom.batteryStateBadge.innerText = 'Active Load';
+      } else {
+        dom.batteryStateBadge.className = 'text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-500/10 border border-slate-500/20 text-slate-500';
+        dom.batteryStateBadge.innerText = 'Standby';
+      }
+
+      const timeStr = timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      dom.lastUpdatedText.innerText = `${state.dataMode === 'sim' ? 'Simulated sample' : 'ESP32 sensor sample'} at ${timeStr}`;
+      dom.freshnessIndicator.className = 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse';
+
+      renderChart();
+    }
+
+    function renderHardwareUnavailable() {
+      dom.valVoltage.innerText = '--';
+      dom.valCurrent.innerText = '--';
+      dom.valTemp.innerText = '--';
+      dom.valSOC.innerText = '--';
+
+      dom.labelVoltageStatus.innerText = 'ESP32 Unreachable';
+      dom.labelCurrentStatus.innerText = 'Sensor Disconnected';
+      dom.labelTempStatus.innerText = 'Unavailable';
+
+      updateGaugeRing(dom.gaugeVoltage, 0);
+      updateGaugeRing(dom.gaugeCurrent, 0);
+      updateGaugeRing(dom.gaugeTemp, 0);
+      updateGaugeRing(dom.gaugeSOC, 0);
+
+      dom.visualSocText.innerText = 'OFFLINE';
+      dom.visualStatusSub.innerText = 'NO HARDWARE';
+      dom.liquidFill.style.height = '0%';
+
+      dom.lastUpdatedText.innerText = 'Hardware Mode: Waiting for ESP32 HTTP response...';
+      dom.freshnessIndicator.className = 'w-2 h-2 rounded-full bg-rose-500';
+
+      dom.statusPill.className = 'flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-500 text-xs font-medium';
+      dom.statusText.innerText = 'Hardware Disconnected';
+    }
+
+    function setMode(mode) {
+      state.dataMode = mode;
+      state.history = []; // Clear chart history on mode switch
+
+      if (mode === 'sim') {
+        dom.btnModeSim.className = 'px-3 py-1 rounded-lg transition bg-amber-500/20 text-amber-500 border border-amber-500/30';
+        dom.btnModeHardware.className = 'px-3 py-1 rounded-lg transition text-slate-400 hover:text-slate-200';
+        
+        dom.simNoticeBanner.style.display = 'flex';
+        dom.simControlsSection.style.display = 'block';
+
+        dom.statusPill.className = 'flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-medium';
+        dom.statusText.innerText = 'SIMULATED DATA (Physics Model)';
+      } else {
+        dom.btnModeHardware.className = 'px-3 py-1 rounded-lg transition bg-cyan-500/20 text-cyan-400 border border-cyan-500/30';
+        dom.btnModeSim.className = 'px-3 py-1 rounded-lg transition text-slate-400 hover:text-slate-200';
+
+        dom.simNoticeBanner.style.display = 'none';
+        dom.simControlsSection.style.display = 'none';
+
+        dom.statusPill.className = 'flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-medium';
+        dom.statusText.innerText = 'HARDWARE TELEMETRY (ESP32)';
+      }
+
+      updateTelemetryCycle();
+    }
+
+    // --- 5. Autonomous Safety Rules Engine ---
+    function evaluateSafetyRules(sample) {
+      const { voltage, current, temp } = sample;
+      let alertMsg = null;
+
+      if (voltage > state.thresholds.maxVolt) {
+        alertMsg = `CRITICAL OVER-VOLTAGE: ${voltage.toFixed(2)}V exceeds limit (${state.thresholds.maxVolt}V). Charge cutoff required.`;
+      } else if (voltage < state.thresholds.minVolt) {
+        alertMsg = `UNDER-VOLTAGE CUTOFF: ${voltage.toFixed(2)}V below minimum threshold (${state.thresholds.minVolt}V). Cell depleted.`;
+      } else if (temp > 55.0) {
+        alertMsg = `HIGH THERMAL RUNAWAY RISK: Cell temperature reached ${temp.toFixed(1)}°C! Emergency disconnect suggested.`;
+      } else if (temp > state.thresholds.maxTemp) {
+        alertMsg = `THERMAL WARNING: High cell temperature (${temp.toFixed(1)}°C > Limit ${state.thresholds.maxTemp}°C). Reduced load required.`;
+      } else if (Math.abs(current) > 7.0) {
+        alertMsg = `HEAVY OVER-CURRENT DRAW: ${current.toFixed(2)}A load stress detected!`;
+      }
+
+      if (alertMsg) {
+        dom.safetyAlertBox.className = 'p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-600 dark:text-rose-300 text-xs flex items-center gap-2 font-medium';
+        dom.safetyAlertText.innerText = alertMsg;
+      } else {
+        dom.safetyAlertBox.className = 'p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs flex items-center gap-2';
+        dom.safetyAlertText.innerText = `Autonomous Protection Active — All cell parameters nominal (${state.dataMode.toUpperCase()} Mode).`;
+      }
+    }
+
+    // --- 6. Interactive Canvas Telemetry Chart ---
+    function renderChart() {
+      const canvas = dom.telemetryCanvas;
+      if (!canvas) return;
+
+      const ctx = canvas.getContext('2d');
+      const rect = canvas.getBoundingClientRect();
+      
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+
+      const width = rect.width;
+      const height = rect.height;
+
+      ctx.clearRect(0, 0, width, height);
+
+      if (state.history.length < 2) {
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '12px Inter';
+        ctx.textAlign = 'center';
+        ctx.fillText('Accumulating telemetry stream data...', width / 2, height / 2);
+        return;
+      }
+
+      const padding = { top: 20, right: 20, bottom: 25, left: 35 };
+      const graphWidth = width - padding.left - padding.right;
+      const graphHeight = height - padding.top - padding.bottom;
+
+      const metric = state.activeChartMetric;
+      const series = state.history.map(d => metric === 'voltage' ? d.voltage : metric === 'current' ? d.current : d.temp);
+
+      let minVal = Math.min(...series);
+      let maxVal = Math.max(...series);
+      if (minVal === maxVal) { minVal -= 0.5; maxVal += 0.5; }
+
+      const isDark = dom.html.classList.contains('dark');
+      ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(148, 163, 184, 0.2)';
+      ctx.lineWidth = 1;
+
+      const gridRows = 4;
+      for (let i = 0; i <= gridRows; i++) {
+        const y = padding.top + (graphHeight / gridRows) * i;
+        ctx.beginPath();
+        ctx.moveTo(padding.left, y);
+        ctx.lineTo(width - padding.right, y);
+        ctx.stroke();
+
+        const val = maxVal - ((maxVal - minVal) / gridRows) * i;
+        ctx.fillStyle = isDark ? '#64748b' : '#94a3b8';
+        ctx.font = '10px Inter';
+        ctx.textAlign = 'right';
+        ctx.fillText(val.toFixed(1), padding.left - 6, y + 3);
+      }
+
+      const points = series.map((val, idx) => {
+        const x = padding.left + (graphWidth / (series.length - 1)) * idx;
+        const y = padding.top + graphHeight - ((val - minVal) / (maxVal - minVal)) * graphHeight;
+        return { x, y, val, time: state.history[idx].timestamp };
+      });
+
+      const lineGradient = ctx.createLinearGradient(0, 0, width, 0);
+      if (metric === 'voltage') {
+        lineGradient.addColorStop(0, '#06b6d4');
+        lineGradient.addColorStop(1, '#3b82f6');
+      } else if (metric === 'current') {
+        lineGradient.addColorStop(0, '#f59e0b');
+        lineGradient.addColorStop(1, '#ec4899');
+      } else {
+        lineGradient.addColorStop(0, '#14b8a6');
+        lineGradient.addColorStop(1, '#8b5cf6');
+      }
+
+      const areaGradient = ctx.createLinearGradient(0, padding.top, 0, height - padding.bottom);
+      if (metric === 'voltage') {
+        areaGradient.addColorStop(0, 'rgba(6, 182, 212, 0.25)');
+        areaGradient.addColorStop(1, 'rgba(6, 182, 212, 0.0)');
+      } else if (metric === 'current') {
+        areaGradient.addColorStop(0, 'rgba(245, 158, 11, 0.25)');
+        areaGradient.addColorStop(1, 'rgba(245, 158, 11, 0.0)');
+      } else {
+        areaGradient.addColorStop(0, 'rgba(20, 184, 166, 0.25)');
+        areaGradient.addColorStop(1, 'rgba(20, 184, 166, 0.0)');
+      }
+
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, height - padding.bottom);
+      ctx.lineTo(points[0].x, points[0].y);
+      for (let i = 0; i < points.length - 1; i++) {
+        const xc = (points[i].x + points[i + 1].x) / 2;
+        const yc = (points[i].y + points[i + 1].y) / 2;
+        ctx.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
+      }
+      ctx.lineTo(points[points.length - 1].x, points[points.length - 1].y);
+      ctx.lineTo(points[points.length - 1].x, height - padding.bottom);
+      ctx.closePath();
+      ctx.fillStyle = areaGradient;
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, points[0].y);
+      for (let i = 0; i < points.length - 1; i++) {
+        const xc = (points[i].x + points[i + 1].x) / 2;
+        const yc = (points[i].y + points[i + 1].y) / 2;
+        ctx.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
+      }
+      ctx.lineTo(points[points.length - 1].x, points[points.length - 1].y);
+      ctx.strokeStyle = lineGradient;
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      const last = points[points.length - 1];
+      ctx.beginPath();
+      ctx.arc(last.x, last.y, 4, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffffff';
+      ctx.shadowColor = metric === 'voltage' ? '#06b6d4' : metric === 'current' ? '#f59e0b' : '#14b8a6';
+      ctx.shadowBlur = 10;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    function setChartMetric(metric) {
+      state.activeChartMetric = metric;
+      [dom.btnChartVoltage, dom.btnChartCurrent, dom.btnChartTemp].forEach(btn => {
+        btn.className = 'px-2.5 py-1 rounded-lg transition text-slate-500 hover:text-slate-800 dark:hover:text-slate-200';
+      });
+
+      if (metric === 'voltage') {
+        dom.btnChartVoltage.className = 'px-2.5 py-1 rounded-lg transition bg-cyan-500/20 text-cyan-600 dark:text-cyan-300 font-semibold';
+      } else if (metric === 'current') {
+        dom.btnChartCurrent.className = 'px-2.5 py-1 rounded-lg transition bg-amber-500/20 text-amber-600 dark:text-amber-300 font-semibold';
+      } else {
+        dom.btnChartTemp.className = 'px-2.5 py-1 rounded-lg transition bg-teal-500/20 text-teal-600 dark:text-teal-300 font-semibold';
+      }
+
+      renderChart();
+    }
+
+    // --- 7. Gemini AI Assistant Diagnostics Engine ---
+    async function runAiDiagnostics(userPrompt = null) {
+      dom.aiResponseBox.innerHTML = `
+        <div class="flex items-center gap-2 text-violet-400">
+          <svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          <span>Performing AI electro-thermal diagnostic audit...</span>
+        </div>
+      `;
+
+      const activeFrame = state.history[state.history.length - 1];
+      const telemetryContext = activeFrame
+        ? `Mode: ${state.dataMode.toUpperCase()}, Terminal Voltage: ${activeFrame.voltage}V, Current Load: ${activeFrame.current}A, Temperature: ${activeFrame.temp}°C, SOC: ${activeFrame.soc}%.`
+        : `Cell is currently awaiting stream data.`;
+
+      const prompt = userPrompt || `Perform a thermal dissipation and load stress diagnostic for a 3.7V Li-Ion battery with data: ${telemetryContext}`;
+
+      if (state.thresholds.geminiKey) {
+        try {
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${state.thresholds.geminiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+          });
+
+          const data = await res.json();
+          if (data.candidates && data.candidates[0].content.parts[0].text) {
+            dom.aiResponseBox.innerHTML = `<p class="whitespace-pre-line">${data.candidates[0].content.parts[0].text}</p>`;
+            return;
+          }
+        } catch (err) {
+          console.warn('Gemini API request failed, falling back to embedded model engine', err);
+        }
+      }
+
+      setTimeout(() => {
+        let analysis = "";
+        if (!activeFrame) {
+          analysis = "VoltGuard AI: Telemetry offline. Connect ESP32 or switch to Simulation Mode to perform analysis.";
+        } else {
+          const { voltage, current, temp, soc } = activeFrame;
+          analysis = `<strong>VoltGuard Electro-Thermal Health Analysis (${state.dataMode.toUpperCase()}):</strong><br/>`;
+          
+          if (current > 5.0) {
+            analysis += `• <strong>High Current Stress:</strong> ${current}A draw causes V_drop = I × R_int drop to ${voltage}V. High internal Joule heating (P = I²R).<br/>`;
+          } else {
+            analysis += `• <strong>Load Distribution:</strong> ${current}A load is within safe C-rate operating envelope.<br/>`;
+          }
+
+          if (temp > 40.0) {
+            analysis += `• <strong>Thermal State:</strong> Elevated cell temp (${temp}°C). Cooling dissipation rate h_dissipation may be exceeded under continuous load.<br/>`;
+          } else {
+            analysis += `• <strong>Thermal State:</strong> Safe thermal equilibrium (${temp}°C). Minimal thermal degradation risk.<br/>`;
+          }
+
+          analysis += `• <strong>Capacity State:</strong> ${soc}% SOC (Estimated OCV ~${(voltage + Math.abs(current)*0.035).toFixed(2)}V).`;
+        }
+        dom.aiResponseBox.innerHTML = `<p>${analysis}</p>`;
+      }, 700);
+    }
+
+    // --- 8. Settings & Simulation Configuration Modal ---
+    function openSettings() {
+      dom.cfgMaxVolt.value = state.thresholds.maxVolt;
+      dom.cfgMinVolt.value = state.thresholds.minVolt;
+      dom.cfgMaxTemp.value = state.thresholds.maxTemp;
+      dom.cfgTempUnit.value = state.thresholds.tempUnit;
+
+      dom.cfgNominalCapacity.value = state.simPhysics.capacityAh;
+      dom.cfgBaseRint.value = state.simPhysics.baseRintMilliOhms;
+      dom.cfgAmbientTemp.value = state.simPhysics.ambientTempC;
+      dom.cfgCoolingFactor.value = state.simPhysics.heatDissipationH;
+      dom.cfgGeminiKey.value = state.thresholds.geminiKey;
+
+      dom.settingsModal.classList.remove('opacity-0', 'pointer-events-none');
+      dom.settingsModalContainer.classList.remove('scale-95');
+      dom.settingsModalContainer.classList.add('scale-100');
+    }
+
+    function closeSettings() {
+      dom.settingsModal.classList.add('opacity-0', 'pointer-events-none');
+      dom.settingsModalContainer.classList.remove('scale-100');
+      dom.settingsModalContainer.classList.add('scale-95');
+    }
+
+    function saveSettings() {
+      state.thresholds.maxVolt = parseFloat(dom.cfgMaxVolt.value) || 4.25;
+      state.thresholds.minVolt = parseFloat(dom.cfgMinVolt.value) || 3.00;
+      state.thresholds.maxTemp = parseFloat(dom.cfgMaxTemp.value) || 45;
+      state.thresholds.tempUnit = dom.cfgTempUnit.value;
+
+      state.simPhysics.capacityAh = parseFloat(dom.cfgNominalCapacity.value) || 3.0;
+      state.simPhysics.baseRintMilliOhms = parseFloat(dom.cfgBaseRint.value) || 35.0;
+      state.simPhysics.ambientTempC = parseFloat(dom.cfgAmbientTemp.value) || 25.0;
+      state.simPhysics.heatDissipationH = parseFloat(dom.cfgCoolingFactor.value) || 0.25;
+      state.thresholds.geminiKey = dom.cfgGeminiKey.value.trim();
+
+      localStorage.setItem('voltguard_maxV', state.thresholds.maxVolt);
+      localStorage.setItem('voltguard_minV', state.thresholds.minVolt);
+      localStorage.setItem('voltguard_maxT', state.thresholds.maxTemp);
+      localStorage.setItem('voltguard_tempUnit', state.thresholds.tempUnit);
+      localStorage.setItem('voltguard_capAh', state.simPhysics.capacityAh);
+      localStorage.setItem('voltguard_baseRint', state.simPhysics.baseRintMilliOhms);
+      localStorage.setItem('voltguard_ambientT', state.simPhysics.ambientTempC);
+      localStorage.setItem('voltguard_coolingH', state.simPhysics.heatDissipationH);
+      localStorage.setItem('voltguard_geminiKey', state.thresholds.geminiKey);
+
+      dom.dispMaxV.innerText = `${state.thresholds.maxVolt.toFixed(2)} V`;
+      dom.dispMinV.innerText = `${state.thresholds.minVolt.toFixed(2)} V`;
+
+      closeSettings();
+    }
+
+    // --- 9. Simulation Load Controls & Handlers ---
+    function setSimCurrent(val) {
+      state.simPhysics.currentLoadA = parseFloat(val);
+      dom.simCurrentSlider.value = val;
+
+      if (val < 0) {
+        dom.simCurrentSliderLabel.innerText = `${Math.abs(val).toFixed(2)} A (Charging)`;
+        dom.simCurrentSliderLabel.className = 'font-bold text-cyan-400 font-mono';
+      } else if (val === 0) {
+        dom.simCurrentSliderLabel.innerText = '0.00 A (Idle Standby)';
+        dom.simCurrentSliderLabel.className = 'font-bold text-slate-400 font-mono';
+      } else {
+        dom.simCurrentSliderLabel.innerText = `${parseFloat(val).toFixed(2)} A (Discharge Load)`;
+        dom.simCurrentSliderLabel.className = 'font-bold text-amber-400 font-mono';
+      }
+    }
+
+    function initEventListeners() {
+      // Mode Switch Buttons
+      dom.btnModeHardware.addEventListener('click', () => setMode('hardware'));
+      dom.btnModeSim.addEventListener('click', () => setMode('sim'));
+
+      // Theme Buttons
+      dom.themeLight.addEventListener('click', () => applyTheme('light'));
+      dom.themeDark.addEventListener('click', () => applyTheme('dark'));
+      dom.themeSystem.addEventListener('click', () => applyTheme('system'));
+
+      // Chart Metric Buttons
+      dom.btnChartVoltage.addEventListener('click', () => setChartMetric('voltage'));
+      dom.btnChartCurrent.addEventListener('click', () => setChartMetric('current'));
+      dom.btnChartTemp.addEventListener('click', () => setChartMetric('temp'));
+
+      // Simulation Action Buttons
+      dom.btnSimStartPause.addEventListener('click', () => {
+        state.simPhysics.running = !state.simPhysics.running;
+        dom.btnSimStartPause.innerText = state.simPhysics.running ? 'Pause Sim' : 'Resume Sim';
+        dom.btnSimStartPause.className = state.simPhysics.running 
+          ? 'px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold text-xs transition shadow-md shadow-amber-500/20'
+          : 'px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold text-xs transition shadow-md shadow-emerald-500/20';
+      });
+
+      dom.btnSimReset.addEventListener('click', () => {
+        state.simPhysics.soc = 85.0;
+        state.simPhysics.cellTempC = state.simPhysics.ambientTempC;
+        setSimCurrent(2.5);
+      });
+
+      // Time Multipliers
+      const resetSpeedBtns = () => {
+        [dom.speed1x, dom.speed5x, dom.speed10x].forEach(b => b.className = 'px-2 py-0.5 rounded transition text-slate-400 hover:text-slate-200');
+      };
+      dom.speed1x.addEventListener('click', () => {
+        resetSpeedBtns();
+        state.simPhysics.speedMultiplier = 1;
+        dom.speed1x.className = 'px-2 py-0.5 rounded transition bg-amber-500/20 text-amber-400 font-bold';
+      });
+      dom.speed5x.addEventListener('click', () => {
+        resetSpeedBtns();
+        state.simPhysics.speedMultiplier = 5;
+        dom.speed5x.className = 'px-2 py-0.5 rounded transition bg-amber-500/20 text-amber-400 font-bold';
+      });
+      dom.speed10x.addEventListener('click', () => {
+        resetSpeedBtns();
+        state.simPhysics.speedMultiplier = 10;
+        dom.speed10x.className = 'px-2 py-0.5 rounded transition bg-amber-500/20 text-amber-400 font-bold';
+      });
+
+      // Preset Load Buttons
+      dom.presetIdle.addEventListener('click', () => setSimCurrent(0.05));
+      dom.presetLight.addEventListener('click', () => setSimCurrent(0.8));
+      dom.presetNormal.addEventListener('click', () => setSimCurrent(2.5));
+      dom.presetHeavy.addEventListener('click', () => setSimCurrent(6.0));
+      dom.presetCharge.addEventListener('click', () => setSimCurrent(-2.0));
+
+      // Slider Input
+      dom.simCurrentSlider.addEventListener('input', (e) => setSimCurrent(e.target.value));
+
+      // ESP32 Link Button
+      dom.btnConnect.addEventListener('click', () => {
+        state.esp32Ip = dom.esp32IpInput.value.trim() || '192.168.4.1';
+        setMode('hardware');
+      });
+
+      // AI Diagnostics
+      dom.btnAiAnalyze.addEventListener('click', () => runAiDiagnostics());
+      dom.btnAskAi.addEventListener('click', () => {
+        const text = dom.aiInputPrompt.value.trim();
+        if (text) {
+          runAiDiagnostics(text);
+          dom.aiInputPrompt.value = '';
+        }
+      });
+      dom.aiInputPrompt.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') dom.btnAskAi.click();
+      });
+
+      // Settings Modal Controls
+      dom.openSettingsBtn.addEventListener('click', openSettings);
+      dom.openSettingsBtnMobile.addEventListener('click', openSettings);
+      dom.closeSettingsBtn.addEventListener('click', closeSettings);
+      dom.cancelSettingsBtn.addEventListener('click', closeSettings);
+      dom.saveSettingsBtn.addEventListener('click', saveSettings);
+
+      window.addEventListener('resize', renderChart);
+    }
+
+    // --- App Lifecycle Initialization ---
+    window.onload = function() {
+      initEventListeners();
+      applyTheme(state.theme);
+
+      dom.dispMaxV.innerText = `${state.thresholds.maxVolt.toFixed(2)} V`;
+      dom.dispMinV.innerText = `${state.thresholds.minVolt.toFixed(2)} V`;
+
+      // Default to Simulation Mode
+      setMode('sim');
+
+      // Start Main Telemetry Loop Timer
+      mainLoopTimer = setInterval(updateTelemetryCycle, state.pollingIntervalMs);
+    };
+  </script>
+</body>
+</html>
